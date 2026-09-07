@@ -37,12 +37,12 @@
     }
 
     .topbar {
-      display: flex;
-      align-items: flex-end;
-      justify-content: space-between;
-      gap: 22px;
+      position: relative;
+      padding-top: 32px;
       margin-bottom: 22px;
     }
+
+    .topbar > div:first-child { text-align: center; }
 
     .eyebrow {
       margin: 0 0 7px;
@@ -51,6 +51,7 @@
       font-weight: 800;
       letter-spacing: 0.18em;
       text-transform: uppercase;
+      transform: translateY(-20px);
     }
 
     h1 {
@@ -61,18 +62,14 @@
       letter-spacing: -0.06em;
     }
 
-    .subtitle {
-      max-width: 420px;
-      margin: 10px 0 0;
-      color: var(--muted);
-      font-size: 0.94rem;
-      line-height: 1.55;
-    }
-
     .new-game {
+      position: absolute;
+      top: 30px;
+      left: calc(50% + 338px);
+      margin: 0;
       border: 0;
       border-radius: 13px;
-      padding: 13px 18px;
+      padding: 20px 18px;
       color: white;
       background: var(--ink);
       box-shadow: 0 8px 0 rgba(45, 36, 29, 0.12);
@@ -86,24 +83,30 @@
     .new-game:active { transform: translateY(1px); }
 
     .game-shell {
-      display: grid;
-      grid-template-columns: 210px minmax(0, 1fr);
+      display: flex;
+      flex-direction: column;
       gap: 18px;
-      align-items: stretch;
     }
 
     .stats {
-      display: grid;
-      gap: 12px;
-      grid-template-rows: repeat(4, min-content) 1fr;
+      position: relative;
+      order: 1;
     }
 
-    .stat, .help {
+    .stat-group {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .stat {
+      min-width: 150px;
       padding: 17px;
       border: 1px solid rgba(234, 218, 202, 0.92);
       border-radius: 16px;
       background: rgba(255, 253, 249, 0.82);
       box-shadow: 0 8px 22px rgba(98, 56, 29, 0.06);
+      text-align: center;
     }
 
     .stat-label {
@@ -125,16 +128,10 @@
 
     .stat-value.red { color: var(--red-dark); }
 
-    .help {
-      align-self: end;
-      color: var(--muted);
-      font-size: 0.84rem;
-      line-height: 1.55;
-    }
-
-    .help strong { display: block; margin-bottom: 6px; color: var(--ink); }
-
     .board-frame {
+      order: 2;
+      width: min(100%, 950px);
+      margin: 0 auto;
       min-width: 0;
       padding: clamp(10px, 1.4vw, 18px);
       border: 1px solid rgba(234, 218, 202, 0.96);
@@ -309,7 +306,7 @@
     }
 
     .modal-button {
-      width: 100%;
+      flex: 1;
       border: 0;
       border-radius: 12px;
       padding: 14px 18px;
@@ -323,12 +320,25 @@
 
     .modal-button:hover { background: var(--red-dark); transform: translateY(-2px); }
 
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .modal-button.secondary {
+      color: var(--ink);
+      background: var(--line);
+    }
+
+    .modal-button.secondary:hover { background: #dbc8b5; }
+
     @media (max-width: 800px) {
-      .topbar { align-items: flex-start; flex-direction: column; }
-      .new-game { align-self: stretch; }
-      .game-shell { grid-template-columns: 1fr; }
-      .stats { grid-template-columns: repeat(4, 1fr); grid-template-rows: auto; }
-      .help { grid-column: 1 / -1; }
+      .new-game {
+        position: static;
+        width: auto;
+        margin: 12px auto 0;
+      }
+      .stats { display: flex; flex-direction: column; align-items: center; }
       .stat { padding: 12px; }
       .stat-value { font-size: 1.55rem; }
     }
@@ -347,19 +357,17 @@
     <header class="topbar">
       <div>
         <p class="eyebrow">Drag · Add · Ten</p>
-        <h1>사과 게임</h1>
-        <p class="subtitle">사과를 드래그해서 골라보세요. 선택한 숫자의 합이 정확히 10이면 사과가 사라집니다.</p>
+        <h1>사과 게임 🍎</h1>
       </div>
-      <button class="new-game" id="newGame" type="button">게임 시작</button>
     </header>
 
     <section class="game-shell" aria-label="사과 게임">
       <aside class="stats">
-        <div class="stat"><span class="stat-label">Score</span><strong class="stat-value red" id="score">0</strong></div>
-        <div class="stat"><span class="stat-label">Best</span><strong class="stat-value" id="best">0</strong></div>
-        <div class="stat"><span class="stat-label">Selected</span><strong class="stat-value" id="selected">0</strong></div>
-        <div class="stat"><span class="stat-label">Time</span><strong class="stat-value red" id="time">30</strong></div>
-        <div class="help"><strong>How to play</strong>마우스 버튼을 누른 채로 사과를 가로 또는 세로로 드래그하세요. 두 개 이상을 선택하고 합계가 정확히 10이면 점수를 얻습니다.</div>
+        <div class="stat-group">
+          <div class="stat"><span class="stat-label">Score</span><strong class="stat-value red" id="score">0</strong></div>
+          <div class="stat"><span class="stat-label">Time</span><strong class="stat-value red" id="time">30</strong></div>
+        </div>
+        <button class="new-game" id="newGame" type="button">게임 시작</button>
       </aside>
 
       <section class="board-frame">
@@ -374,7 +382,10 @@
       <p class="result-kicker">Time's up</p>
       <h2 id="finalScoreTitle">0</h2>
       <p class="result-label">최종 점수</p>
-      <button class="modal-button" id="modalNewGame" type="button">다시 시작</button>
+      <div class="modal-actions">
+        <button class="modal-button" id="modalNewGame" type="button">다시 시작</button>
+        <button class="modal-button secondary" id="modalExit" type="button">종료</button>
+      </div>
     </section>
   </div>
 
@@ -383,8 +394,6 @@
     const rows = 10;
     const board = document.querySelector('#board');
     const scoreElement = document.querySelector('#score');
-    const bestElement = document.querySelector('#best');
-    const selectedElement = document.querySelector('#selected');
     const timeElement = document.querySelector('#time');
     const statusElement = document.querySelector('#status');
     const toastElement = document.querySelector('#toast');
@@ -392,6 +401,7 @@
     const resultModal = document.querySelector('#resultModal');
     const finalScoreElement = document.querySelector('#finalScoreTitle');
     const modalNewGameButton = document.querySelector('#modalNewGame');
+    const modalExitButton = document.querySelector('#modalExit');
 
     let apples = [];
     let score = 0;
@@ -415,7 +425,6 @@
       timeLeft = 30;
       gameOver = false;
       apples = Array.from({ length: rows * columns }, () => randomNumber());
-      bestElement.textContent = best;
       timeElement.textContent = timeLeft;
       updateScore();
       renderBoard();
@@ -429,6 +438,7 @@
 
     function endGame() {
       clearInterval(timerId);
+      timerId = null;
       gameOver = true;
       isDragging = false;
       dragStart = null;
@@ -439,12 +449,29 @@
       resultModal.setAttribute('aria-hidden', 'false');
     }
 
+    function returnToStartScreen() {
+      clearInterval(timerId);
+      timerId = null;
+      gameOver = true;
+      isDragging = false;
+      dragStart = null;
+      apples = [];
+      score = 0;
+      timeLeft = 30;
+      updateScore();
+      timeElement.textContent = timeLeft;
+      renderBoard();
+      clearSelection();
+      statusElement.textContent = '게임 시작 버튼을 눌러주세요';
+      newGameButton.textContent = '게임 시작';
+      resultModal.classList.remove('show');
+      resultModal.setAttribute('aria-hidden', 'true');
+    }
+
     function updateScore() {
       scoreElement.textContent = score;
-      selectedElement.textContent = '0';
       if (score > best) {
         best = score;
-        bestElement.textContent = best;
         localStorage.setItem('apple-ten-best', String(best));
       }
     }
@@ -492,14 +519,12 @@
 
     function clearSelection() {
       board.querySelectorAll('.selected').forEach((cell) => cell.classList.remove('selected'));
-      selectedElement.textContent = '0';
     }
 
     function selectRectangle(endIndex) {
       clearSelection();
       const indexes = getRectangle(dragStart, endIndex).filter((index) => apples[index] !== null);
       indexes.forEach((index) => cellAt(index).classList.add('selected'));
-      selectedElement.textContent = indexes.length;
       const total = indexes.reduce((sum, index) => sum + apples[index], 0);
       statusElement.textContent = `${indexes.length}개 선택 · 합계 ${total}`;
     }
@@ -558,6 +583,7 @@
     board.addEventListener('pointercancel', finishSelection);
     newGameButton.addEventListener('click', startGame);
     modalNewGameButton.addEventListener('click', startGame);
+    modalExitButton.addEventListener('click', returnToStartScreen);
 
   </script>
 </body>
