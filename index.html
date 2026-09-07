@@ -365,7 +365,7 @@
       <aside class="stats">
         <div class="stat-group">
           <div class="stat"><span class="stat-label">Score</span><strong class="stat-value red" id="score">0</strong></div>
-          <div class="stat"><span class="stat-label">Time</span><strong class="stat-value red" id="time">30</strong></div>
+          <div class="stat"><span class="stat-label">Time</span><strong class="stat-value red" id="time">60</strong></div>
         </div>
         <button class="new-game" id="newGame" type="button">게임 시작</button>
       </aside>
@@ -408,7 +408,7 @@
     let best = Number(localStorage.getItem('apple-ten-best') || 0);
     let dragStart = null;
     let isDragging = false;
-    let timeLeft = 30;
+    let timeLeft = 60;
     let timerId = null;
     let gameOver = true;
 
@@ -422,7 +422,7 @@
       resultModal.setAttribute('aria-hidden', 'true');
       newGameButton.textContent = '새 게임 시작';
       score = 0;
-      timeLeft = 30;
+      timeLeft = 60;
       gameOver = false;
       apples = Array.from({ length: rows * columns }, () => randomNumber());
       timeElement.textContent = timeLeft;
@@ -457,7 +457,7 @@
       dragStart = null;
       apples = [];
       score = 0;
-      timeLeft = 30;
+      timeLeft = 60;
       updateScore();
       timeElement.textContent = timeLeft;
       renderBoard();
