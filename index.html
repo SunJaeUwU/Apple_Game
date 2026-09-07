@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Apple Ten</title>
+  <style>
+    :root {
+      --ink: #2d241d;
+      --muted: #7c6b5d;
+      --cream: #fff8ed;
+      --paper: #fffdf9;
+      --red: #e8473f;
+      --red-dark: #bd302d;
+      --green: #75a85b;
+      --line: #eadaca;
+      --shadow: 0 22px 60px rgba(98, 56, 29, 0.14);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      color: var(--ink);
+      font-family: "Trebuchet MS", "Malgun Gothic", sans-serif;
+      background:
+        radial-gradient(circle at 10% 5%, rgba(255, 210, 103, 0.36), transparent 25%),
+        radial-gradient(circle at 90% 90%, rgba(157, 202, 121, 0.28), transparent 28%),
+        var(--cream);
+    }
+
+    .app {
+      width: min(100% - 28px, 1500px);
+      margin: 0 auto;
+      padding: 28px 0 42px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 22px;
+      margin-bottom: 22px;
+    }
+
+    .eyebrow {
+      margin: 0 0 7px;
+      color: var(--red-dark);
+      font-size: 0.74rem;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: Georgia, "Malgun Gothic", serif;
+      font-size: clamp(2.1rem, 5vw, 4.5rem);
+      line-height: 0.95;
+      letter-spacing: -0.06em;
+    }
+
+    .subtitle {
+      max-width: 420px;
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 0.94rem;
+      line-height: 1.55;
+    }
+
+    .new-game {
+      border: 0;
+      border-radius: 13px;
+      padding: 13px 18px;
+      color: white;
+      background: var(--ink);
+      box-shadow: 0 8px 0 rgba(45, 36, 29, 0.12);
+      cursor: pointer;
+      font: inherit;
+      font-weight: 800;
+      transition: transform 140ms ease, background 140ms ease;
+    }
+
+    .new-game:hover { background: var(--red-dark); transform: translateY(-2px); }
+    .new-game:active { transform: translateY(1px); }
+
+    .game-shell {
+      display: grid;
+      grid-template-columns: 210px minmax(0, 1fr);
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .stats {
+      display: grid;
+      gap: 12px;
+      grid-template-rows: repeat(4, min-content) 1fr;
+    }
+
+    .stat, .help {
+      padding: 17px;
+      border: 1px solid rgba(234, 218, 202, 0.92);
+      border-radius: 16px;
+      background: rgba(255, 253, 249, 0.82);
+      box-shadow: 0 8px 22px rgba(98, 56, 29, 0.06);
+    }
+
+    .stat-label {
+      display: block;
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+    }
+
+    .stat-value {
+      display: block;
+      margin-top: 4px;
+      font-family: Georgia, serif;
+      font-size: 2rem;
+      font-weight: 700;
+    }
+
+    .stat-value.red { color: var(--red-dark); }
+
+    .help {
+      align-self: end;
+      color: var(--muted);
+      font-size: 0.84rem;
+      line-height: 1.55;
+    }
+
+    .help strong { display: block; margin-bottom: 6px; color: var(--ink); }
+
+    .board-frame {
+      min-width: 0;
+      padding: clamp(10px, 1.4vw, 18px);
+      border: 1px solid rgba(234, 218, 202, 0.96);
+      border-radius: 20px;
+      background: var(--paper);
+      box-shadow: var(--shadow);
+    }
+
+    .board-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 0 4px 12px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .board-meta .status { color: var(--red-dark); }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(19, minmax(22px, 1fr));
+      grid-template-rows: repeat(10, minmax(33px, 1fr));
+      gap: clamp(3px, 0.45vw, 7px);
+      user-select: none;
+      touch-action: none;
+    }
+
+    .cell {
+      position: relative;
+      display: grid;
+      place-items: center;
+      min-width: 0;
+      aspect-ratio: 1 / 1;
+      border: 1px solid transparent;
+      border-radius: 11px;
+      background: #fff7e9;
+      cursor: crosshair;
+      transition: transform 100ms ease, background 100ms ease, border-color 100ms ease;
+    }
+
+    .cell:hover { transform: translateY(-2px); background: #ffefd2; }
+    .cell.selected { border-color: var(--red); background: #ffe0d5; transform: scale(1.06); z-index: 1; }
+    .cell.empty { visibility: hidden; pointer-events: none; }
+
+    .apple {
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: 78%;
+      height: 78%;
+      border-radius: 48% 48% 45% 45%;
+      color: white;
+      background: linear-gradient(135deg, #ff7564 0%, var(--red) 60%, #c82c32 100%);
+      box-shadow: inset -3px -4px 0 rgba(121, 23, 25, 0.14), 0 3px 5px rgba(117, 39, 26, 0.18);
+      font-family: Georgia, serif;
+      font-size: clamp(0.74rem, 1.4vw, 1.18rem);
+      font-weight: 800;
+    }
+
+    .apple::before {
+      content: "";
+      position: absolute;
+      top: -18%;
+      left: 49%;
+      width: 20%;
+      height: 30%;
+      border-radius: 50%;
+      background: #67472d;
+      transform: rotate(10deg);
+    }
+
+    .apple::after {
+      content: "";
+      position: absolute;
+      top: -12%;
+      left: 57%;
+      width: 34%;
+      height: 19%;
+      border-radius: 100% 0 100% 0;
+      background: var(--green);
+      transform: rotate(-18deg);
+    }
+
+    .pop { animation: pop 250ms ease-out both; }
+
+    @keyframes pop {
+      0% { transform: scale(1); opacity: 1; }
+      70% { transform: scale(1.32) rotate(8deg); opacity: 0.8; }
+      100% { transform: scale(0.2) rotate(-10deg); opacity: 0; }
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 30px;
+      z-index: 5;
+      padding: 12px 18px;
+      border-radius: 999px;
+      color: white;
+      background: var(--ink);
+      box-shadow: 0 10px 28px rgba(45, 36, 29, 0.24);
+      font-size: 0.9rem;
+      font-weight: 800;
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(-50%, 15px);
+    }
+
+    .toast.show { animation: toast 1.5s ease both; }
+
+    @keyframes toast {
+      15%, 75% { opacity: 1; transform: translate(-50%, 0); }
+    }
+
+    .result-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      background: rgba(45, 36, 29, 0.48);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 180ms ease;
+    }
+
+    .result-modal.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .result-card {
+      width: min(100%, 390px);
+      padding: 34px 28px 28px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: var(--paper);
+      box-shadow: 0 24px 70px rgba(45, 36, 29, 0.3);
+      text-align: center;
+      transform: translateY(14px) scale(0.96);
+      transition: transform 180ms ease;
+    }
+
+    .result-modal.show .result-card { transform: translateY(0) scale(1); }
+
+    .result-kicker {
+      margin: 0;
+      color: var(--red-dark);
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .result-card h2 {
+      margin: 10px 0 2px;
+      font-family: Georgia, "Malgun Gothic", serif;
+      font-size: clamp(3.4rem, 13vw, 5rem);
+      line-height: 1;
+    }
+
+    .result-label {
+      margin: 0 0 24px;
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+
+    .modal-button {
+      width: 100%;
+      border: 0;
+      border-radius: 12px;
+      padding: 14px 18px;
+      color: white;
+      background: var(--red);
+      cursor: pointer;
+      font: inherit;
+      font-weight: 800;
+      transition: background 140ms ease, transform 140ms ease;
+    }
+
+    .modal-button:hover { background: var(--red-dark); transform: translateY(-2px); }
+
+    @media (max-width: 800px) {
+      .topbar { align-items: flex-start; flex-direction: column; }
+      .new-game { align-self: stretch; }
+      .game-shell { grid-template-columns: 1fr; }
+      .stats { grid-template-columns: repeat(4, 1fr); grid-template-rows: auto; }
+      .help { grid-column: 1 / -1; }
+      .stat { padding: 12px; }
+      .stat-value { font-size: 1.55rem; }
+    }
+
+    @media (max-width: 520px) {
+      .app { width: min(100% - 16px, 1500px); padding-top: 18px; }
+      .board { gap: 2px; grid-template-columns: repeat(19, minmax(15px, 1fr)); grid-template-rows: repeat(10, minmax(24px, 1fr)); }
+      .cell { border-radius: 6px; }
+      .apple { font-size: 0.66rem; }
+      .board-meta { font-size: 0.65rem; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Drag · Add · Ten</p>
+        <h1>사과 게임</h1>
+        <p class="subtitle">사과를 드래그해서 골라보세요. 선택한 숫자의 합이 정확히 10이면 사과가 사라집니다.</p>
+      </div>
+      <button class="new-game" id="newGame" type="button">게임 시작</button>
+    </header>
+
+    <section class="game-shell" aria-label="사과 게임">
+      <aside class="stats">
+        <div class="stat"><span class="stat-label">Score</span><strong class="stat-value red" id="score">0</strong></div>
+        <div class="stat"><span class="stat-label">Best</span><strong class="stat-value" id="best">0</strong></div>
+        <div class="stat"><span class="stat-label">Selected</span><strong class="stat-value" id="selected">0</strong></div>
+        <div class="stat"><span class="stat-label">Time</span><strong class="stat-value red" id="time">30</strong></div>
+        <div class="help"><strong>How to play</strong>마우스 버튼을 누른 채로 사과를 가로 또는 세로로 드래그하세요. 두 개 이상을 선택하고 합계가 정확히 10이면 점수를 얻습니다.</div>
+      </aside>
+
+      <section class="board-frame">
+        <div class="board-meta"><span>19 × 10 orchard</span><span class="status" id="status">게임 시작 버튼을 눌러주세요</span></div>
+        <div class="board" id="board" aria-label="사과 190개 게임판"></div>
+      </section>
+    </section>
+  </main>
+  <div class="toast" id="toast" role="status"></div>
+  <div class="result-modal" id="resultModal" aria-hidden="true">
+    <section class="result-card" role="dialog" aria-modal="true" aria-labelledby="finalScoreTitle">
+      <p class="result-kicker">Time's up</p>
+      <h2 id="finalScoreTitle">0</h2>
+      <p class="result-label">최종 점수</p>
+      <button class="modal-button" id="modalNewGame" type="button">다시 시작</button>
+    </section>
+  </div>
+
+  <script>
+    const columns = 19;
+    const rows = 10;
+    const board = document.querySelector('#board');
+    const scoreElement = document.querySelector('#score');
+    const bestElement = document.querySelector('#best');
+    const selectedElement = document.querySelector('#selected');
+    const timeElement = document.querySelector('#time');
+    const statusElement = document.querySelector('#status');
+    const toastElement = document.querySelector('#toast');
+    const newGameButton = document.querySelector('#newGame');
+    const resultModal = document.querySelector('#resultModal');
+    const finalScoreElement = document.querySelector('#finalScoreTitle');
+    const modalNewGameButton = document.querySelector('#modalNewGame');
+
+    let apples = [];
+    let score = 0;
+    let best = Number(localStorage.getItem('apple-ten-best') || 0);
+    let dragStart = null;
+    let isDragging = false;
+    let timeLeft = 30;
+    let timerId = null;
+    let gameOver = true;
+
+    function randomNumber() {
+      return Math.floor(Math.random() * 9) + 1;
+    }
+
+    function startGame() {
+      clearInterval(timerId);
+      resultModal.classList.remove('show');
+      resultModal.setAttribute('aria-hidden', 'true');
+      newGameButton.textContent = '새 게임 시작';
+      score = 0;
+      timeLeft = 30;
+      gameOver = false;
+      apples = Array.from({ length: rows * columns }, () => randomNumber());
+      bestElement.textContent = best;
+      timeElement.textContent = timeLeft;
+      updateScore();
+      renderBoard();
+      statusElement.textContent = '사과를 선택하세요';
+      timerId = setInterval(() => {
+        timeLeft -= 1;
+        timeElement.textContent = timeLeft;
+        if (timeLeft <= 0) endGame();
+      }, 1000);
+    }
+
+    function endGame() {
+      clearInterval(timerId);
+      gameOver = true;
+      isDragging = false;
+      dragStart = null;
+      clearSelection();
+      statusElement.textContent = `시간 종료 · 최종 점수 ${score}점`;
+      finalScoreElement.textContent = score;
+      resultModal.classList.add('show');
+      resultModal.setAttribute('aria-hidden', 'false');
+    }
+
+    function updateScore() {
+      scoreElement.textContent = score;
+      selectedElement.textContent = '0';
+      if (score > best) {
+        best = score;
+        bestElement.textContent = best;
+        localStorage.setItem('apple-ten-best', String(best));
+      }
+    }
+
+    function renderBoard() {
+      board.replaceChildren();
+      apples.forEach((value, index) => {
+        const cell = document.createElement('div');
+        cell.className = value === null ? 'cell empty' : 'cell';
+        cell.dataset.index = index;
+        cell.setAttribute('role', 'gridcell');
+        if (value !== null) {
+          const apple = document.createElement('span');
+          apple.className = 'apple';
+          apple.textContent = value;
+          apple.setAttribute('aria-label', `숫자 ${value} 사과`);
+          cell.append(apple);
+        }
+        board.append(cell);
+      });
+    }
+
+    function cellAt(index) {
+      return board.children[index];
+    }
+
+    function getRectangle(start, end) {
+      const startRow = Math.floor(start / columns);
+      const startColumn = start % columns;
+      const endRow = Math.floor(end / columns);
+      const endColumn = end % columns;
+      const minRow = Math.min(startRow, endRow);
+      const maxRow = Math.max(startRow, endRow);
+      const minColumn = Math.min(startColumn, endColumn);
+      const maxColumn = Math.max(startColumn, endColumn);
+      const indexes = [];
+
+      for (let row = minRow; row <= maxRow; row += 1) {
+        for (let column = minColumn; column <= maxColumn; column += 1) {
+          indexes.push(row * columns + column);
+        }
+      }
+      return indexes;
+    }
+
+    function clearSelection() {
+      board.querySelectorAll('.selected').forEach((cell) => cell.classList.remove('selected'));
+      selectedElement.textContent = '0';
+    }
+
+    function selectRectangle(endIndex) {
+      clearSelection();
+      const indexes = getRectangle(dragStart, endIndex).filter((index) => apples[index] !== null);
+      indexes.forEach((index) => cellAt(index).classList.add('selected'));
+      selectedElement.textContent = indexes.length;
+      const total = indexes.reduce((sum, index) => sum + apples[index], 0);
+      statusElement.textContent = `${indexes.length}개 선택 · 합계 ${total}`;
+    }
+
+    function finishSelection() {
+      if (gameOver || !isDragging || dragStart === null) return;
+      const selectedCells = [...board.querySelectorAll('.selected')];
+      const indexes = selectedCells.map((cell) => Number(cell.dataset.index));
+      const total = indexes.reduce((sum, index) => sum + apples[index], 0);
+      isDragging = false;
+
+      if (indexes.length >= 2 && total === 10) {
+        selectedCells.forEach((cell) => cell.classList.add('pop'));
+        score += total * indexes.length;
+        setTimeout(() => {
+          indexes.forEach((index) => { apples[index] = null; });
+          updateScore();
+          renderBoard();
+        }, 220);
+        showToast(`+${total * indexes.length} 점!`);
+        statusElement.textContent = '좋아요! 계속 선택하세요';
+      } else {
+        showToast(indexes.length < 2 ? '두 개 이상 선택하세요' : '합계가 정확히 10이어야 해요');
+        clearSelection();
+        statusElement.textContent = '조건에 맞는 사과를 선택하세요';
+      }
+      dragStart = null;
+    }
+
+    function showToast(message) {
+      toastElement.textContent = message;
+      toastElement.classList.remove('show');
+      void toastElement.offsetWidth;
+      toastElement.classList.add('show');
+    }
+
+    board.addEventListener('pointerdown', (event) => {
+      if (gameOver) return;
+      const cell = event.target.closest('.cell:not(.empty)');
+      if (!cell) return;
+      event.preventDefault();
+      board.setPointerCapture(event.pointerId);
+      dragStart = Number(cell.dataset.index);
+      isDragging = true;
+      selectRectangle(dragStart);
+    });
+
+    board.addEventListener('pointermove', (event) => {
+      if (gameOver || !isDragging) return;
+      const element = document.elementFromPoint(event.clientX, event.clientY);
+      const cell = element && element.closest('.cell:not(.empty)');
+      if (cell && board.contains(cell)) selectRectangle(Number(cell.dataset.index));
+    });
+
+    board.addEventListener('pointerup', finishSelection);
+    board.addEventListener('pointercancel', finishSelection);
+    newGameButton.addEventListener('click', startGame);
+    modalNewGameButton.addEventListener('click', startGame);
+
+  </script>
+</body>
+</html>
